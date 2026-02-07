@@ -1,0 +1,70 @@
+@import "react-day-picker/style.css";
+
+@tailwind base;
+
+.rdp-root {
+  --rdp-accent-color: var(--primary);
+  --rdp-accent-background-color: color-mix(
+    in srgb,
+    var(--primary) 15%,
+    transparent
+  );
+  --rdp-today-color: var(--primary);
+  --rdp-dropdown-gap: 0.75rem;
+}
+
+/* Layout dos dropdowns de mês e ano */
+.rdp-dropdowns {
+  gap: var(--rdp-dropdown-gap);
+}
+
+/* Layout <- mês ano -> com botões inline na mesma linha */
+.rdp-root[data-nav-layout="around"] .rdp-month {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.rdp-root[data-nav-layout="around"] .rdp-month_caption {
+  grid-column: 2;
+  justify-self: center;
+  margin: 0;
+}
+
+.rdp-root[data-nav-layout="around"] .rdp-button_previous {
+  grid-column: 1;
+  position: static;
+}
+
+.rdp-root[data-nav-layout="around"] .rdp-button_next {
+  grid-column: 3;
+  position: static;
+}
+
+.rdp-root[data-nav-layout="around"] .rdp-month_grid {
+  grid-column: 1 / -1;
+}
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: #ffffff;
+    --foreground: #171717;
+    --primary: #1cb454;
+    --primary-foreground: #ffffff;
+    --muted: #f5f5f5;
+    --muted-foreground: #737373;
+    --border: #e5e5e5;
+    --input: #e5e5e5;
+    --ring: #1cb454;
+    --radius: 0.5rem;
+  }
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background-color: var(--background);
+}
