@@ -1,7 +1,7 @@
+import type { Server } from "miragejs";
 import { getDashboard } from "../services/dashboard.service";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function registerDashboardRoutes(server: any) {
+export function registerDashboardRoutes(server: Server) {
   server.get("/dashboard", (schema: unknown) =>
     getDashboard(schema as Parameters<typeof getDashboard>[0]),
   );

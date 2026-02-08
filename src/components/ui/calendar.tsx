@@ -1,14 +1,11 @@
 "use client";
 
-/**
- * Calendar - wrapper do react-day-picker (DayPicker) com estilos shadcn
- */
 import * as React from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { DayPicker } from "react-day-picker";
 import { ptBR } from "react-day-picker/locale";
 import { cn } from "@/lib/utils";
-import { buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button-variants";
 
 export type CalendarProps = React.ComponentProps<typeof DayPicker>;
 

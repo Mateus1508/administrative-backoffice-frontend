@@ -5,14 +5,12 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-/** Formata data ISO (yyyy-MM-dd) para pt-BR (dd/MM/yyyy) */
 export function formatDate(isoDate: string): string {
   if (!isoDate) return "";
   const [y, m, d] = isoDate.split("-");
   return `${d}/${m}/${y}`;
 }
 
-/** Formata valor numérico para Real brasileiro (R$ 1.234,56) */
 export function formatBRL(value: number): string {
   return new Intl.NumberFormat("pt-BR", {
     style: "currency",
@@ -20,7 +18,6 @@ export function formatBRL(value: number): string {
   }).format(value);
 }
 
-/** Converte string em formato BRL (ex: "1.234,56" ou "R$ 350,00") para número */
 export function parseBRL(value: string): number {
   if (!value || !value.trim()) return 0;
   const normalized = value.replace(/\s/g, "").replace(/R\$/gi, "").trim();

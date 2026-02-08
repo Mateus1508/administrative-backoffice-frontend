@@ -1,7 +1,7 @@
+import type { Server } from "miragejs";
 import { commissionsService } from "../services/commissions.service";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function registerCommissionsRoutes(server: any) {
+export function registerCommissionsRoutes(server: Server) {
   server.get("/commissions", (schema: unknown, request: unknown) =>
     commissionsService.list(
       schema as Parameters<typeof commissionsService.list>[0],

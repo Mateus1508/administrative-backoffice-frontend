@@ -1,10 +1,5 @@
 "use client";
 
-/**
- * DatePicker - Popover shadcn + Calendar (react-day-picker)
- * Header no formato: <- fevereiro 2026 -> (mês e ano clicáveis para seleção)
- */
-
 import * as React from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -21,7 +16,6 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 
-/** Dropdown com Radix Select - mês/ano clicáveis, modal estilizado (padding, bordas arredondadas, hover verde) */
 function DropdownRadix({
   options = [],
   value,
@@ -91,7 +85,6 @@ function DropdownRadix({
 }
 
 export interface DatePickerProps {
-  /** ISO date string (yyyy-MM-dd) */
   value?: string;
   onChange?: (isoDate: string) => void;
   placeholder?: string;
@@ -102,7 +95,6 @@ export interface DatePickerProps {
 
 function toDate(iso?: string): Date | undefined {
   if (!iso) return undefined;
-  // força meio-dia pra evitar bug de timezone
   const d = new Date(iso + "T12:00:00");
   return Number.isNaN(d.getTime()) ? undefined : d;
 }

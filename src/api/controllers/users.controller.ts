@@ -1,7 +1,7 @@
+import type { Server } from "miragejs";
 import { usersService } from "../services/users.service";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function registerUsersRoutes(server: any) {
+export function registerUsersRoutes(server: Server) {
   server.get("/users", (schema: unknown, request: unknown) =>
     usersService.list(
       schema as Parameters<typeof usersService.list>[0],

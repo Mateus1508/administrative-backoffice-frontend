@@ -1,12 +1,19 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-function getModels(schema: any, model: string) {
-  return schema.all(model).models as any[];
+interface MirageRecord {
+  id?: string;
+  attrs?: Record<string, unknown>;
+  [key: string]: unknown;
 }
 
-export function getDashboard(schema: {
-  all: (model: string) => { models: any[] };
-  find: (model: string, id: string) => any;
-}) {
+interface MirageSchema {
+  all: (model: string) => { models: MirageRecord[] };
+  find: (model: string, id: string) => MirageRecord | undefined;
+}
+
+function getModels(schema: MirageSchema, model: string): MirageRecord[] {
+  return schema.all(model).models;
+}
+
+export function getDashboard(schema: MirageSchema) {
   const users = getModels(schema, "user");
   const orders = getModels(schema, "order");
   const commissions = getModels(schema, "commission");

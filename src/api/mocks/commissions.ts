@@ -1,6 +1,3 @@
-/**
- * userId (PARTNER) e orderId referenciam os ids de usuários e pedidos (1 a 20)
- */
 export const commissionsSeed = [
   { id: "1", userId: "1", orderId: "1", amount: 35, status: "paga" as const },
   {

@@ -1,6 +1,6 @@
-import { useState, useMemo, useEffect } from "react";
 import { Filter, Loader2, Wallet, Clock, CheckCircle } from "lucide-react";
-import { Badge, badgeVariants } from "@/components/ui/badge";
+import { Badge } from "@/components/ui/badge";
+import { badgeVariants } from "@/components/ui/badge-variants";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -9,59 +9,33 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Pagination, DEFAULT_PAGE_SIZE } from "@/components/ui/pagination";
+import { Pagination } from "@/components/ui/pagination";
 import { cn, formatBRL } from "@/lib/utils";
-import { useCommissions } from "@/hooks/useCommissions";
-import { useFilters } from "@/hooks/useFilters";
-import type { CommissionFilters, CommissionStatus } from "@/types/commission";
-
-const defaultFilters: CommissionFilters = {
-  status: "",
-};
-
-const statusLabels: Record<CommissionStatus, string> = {
-  pendente: "Pendente",
-  paga: "Paga",
-};
+import {
+  useCommissionsPage,
+  COMMISSION_STATUS_LABELS,
+} from "@/hooks/useCommissionsPage";
+import type { CommissionStatus } from "@/types/commission";
 
 export function Commissions() {
-  const [filterOpen, setFilterOpen] = useState(false);
-  const { filters, setFilter, clearFilters, hasActiveFilters } =
-    useFilters<CommissionFilters>(defaultFilters);
-
-  const { data: commissions = [], isLoading, error } = useCommissions(filters);
-  const { data: allCommissions = [] } = useCommissions({ status: "" });
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
-
-  useEffect(() => {
-    setPage(1);
-  }, [filters]);
-
-  const totalCommissions = commissions.length;
-  const paginatedCommissions = useMemo(
-    () => commissions.slice((page - 1) * pageSize, page * pageSize),
-    [commissions, page, pageSize],
-  );
-
-  const totalsByStatus = useMemo(() => {
-    const pendente = allCommissions.filter((c) => c.status === "pendente");
-    const paga = allCommissions.filter((c) => c.status === "paga");
-    return {
-      pendente: {
-        count: pendente.length,
-        amount: pendente.reduce((sum, c) => sum + c.amount, 0),
-      },
-      paga: {
-        count: paga.length,
-        amount: paga.reduce((sum, c) => sum + c.amount, 0),
-      },
-      total: {
-        count: allCommissions.length,
-        amount: allCommissions.reduce((sum, c) => sum + c.amount, 0),
-      },
-    };
-  }, [allCommissions]);
+  const {
+    filterOpen,
+    setFilterOpen,
+    filters,
+    setFilterAndResetPage,
+    clearFiltersAndResetPage,
+    hasActiveFilters,
+    commissions,
+    isLoading,
+    error,
+    paginatedCommissions,
+    totalCommissions,
+    page,
+    pageSize,
+    setPage,
+    onPageSizeChange,
+    totalsByStatus,
+  } = useCommissionsPage();
 
   return (
     <div className="p-6">
@@ -144,7 +118,10 @@ export function Commissions() {
               <Select
                 value={filters.status || "_all"}
                 onValueChange={(v: string) =>
-                  setFilter("status", v === "_all" ? "" : (v as CommissionStatus))
+                  setFilterAndResetPage(
+                    "status",
+                    v === "_all" ? "" : (v as CommissionStatus),
+                  )
                 }
               >
                 <SelectTrigger id="filter-status">
@@ -160,7 +137,7 @@ export function Commissions() {
             {hasActiveFilters && (
               <button
                 type="button"
-                onClick={clearFilters}
+                onClick={clearFiltersAndResetPage}
                 className="rounded-md px-3 py-2 text-sm text-gray-600 hover:bg-gray-200"
               >
                 Limpar filtros
@@ -208,29 +185,29 @@ export function Commissions() {
                 </thead>
                 <tbody>
                   {paginatedCommissions.map((commission) => (
-                  <tr
-                    key={commission.id}
-                    className="border-b border-gray-100 transition-colors hover:bg-gray-50/50"
-                  >
-                    <td className="px-4 py-3 font-medium text-gray-900">
-                      {commission.user?.name ?? `ID ${commission.userId}`}
-                    </td>
-                    <td className="px-4 py-3 font-mono text-gray-600">
-                      {commission.order?.orderId ?? commission.orderId}
-                    </td>
-                    <td className="px-4 py-3 text-gray-700">
-                      {formatBRL(commission.amount)}
-                    </td>
-                    <td className="px-4 py-3">
-                      <Badge
-                        variant={
-                          commission.status as keyof typeof badgeVariants
-                        }
-                      >
-                        {statusLabels[commission.status]}
-                      </Badge>
-                    </td>
-                  </tr>
+                    <tr
+                      key={commission.id}
+                      className="border-b border-gray-100 transition-colors hover:bg-gray-50/50"
+                    >
+                      <td className="px-4 py-3 font-medium text-gray-900">
+                        {commission.user?.name ?? `ID ${commission.userId}`}
+                      </td>
+                      <td className="px-4 py-3 font-mono text-gray-600">
+                        {commission.order?.orderId ?? commission.orderId}
+                      </td>
+                      <td className="px-4 py-3 text-gray-700">
+                        {formatBRL(commission.amount)}
+                      </td>
+                      <td className="px-4 py-3">
+                        <Badge
+                          variant={
+                            commission.status as keyof typeof badgeVariants
+                          }
+                        >
+                          {COMMISSION_STATUS_LABELS[commission.status]}
+                        </Badge>
+                      </td>
+                    </tr>
                   ))}
                 </tbody>
               </table>
@@ -240,10 +217,7 @@ export function Commissions() {
               pageSize={pageSize}
               totalItems={totalCommissions}
               onPageChange={setPage}
-              onPageSizeChange={(size) => {
-                setPageSize(size);
-                setPage(1);
-              }}
+              onPageSizeChange={onPageSizeChange}
             />
           </>
         )}

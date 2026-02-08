@@ -44,7 +44,9 @@ describe("cn", () => {
   });
 
   it("aceita condicionais", () => {
-    expect(cn("base", true && "active")).toBe("base active");
-    expect(cn("base", false && "active")).toBe("base");
+    const showActive = true;
+    const hideActive = false;
+    expect(cn("base", showActive ? "active" : null)).toBe("base active");
+    expect(cn("base", hideActive ? "active" : null)).toBe("base");
   });
 });

@@ -1,4 +1,3 @@
-import { useMemo } from "react";
 import { Chart } from "react-charts";
 import { Loader2 } from "lucide-react";
 import {
@@ -9,236 +8,18 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useDashboard } from "@/hooks/useDashboard";
-import { formatBRL } from "@/lib/utils";
-import type { AxisOptions } from "react-charts";
-
-const ORDER_STATUS_LABELS: Record<string, string> = {
-  pendente: "Pendente",
-  processando: "Processando",
-  entregue: "Entregue",
-  cancelado: "Cancelado",
-};
-
-const COMMISSION_STATUS_LABELS: Record<string, string> = {
-  pendente: "Pendente",
-  paga: "Paga",
-};
-
-type OrderDatum = { status: string; count: number; label: string };
-type CommissionDatum = { status: string; count: number; label: string };
-type ProductDatum = { productName: string; count: number; label: string };
-type SellerDatum = { userName: string; amount: number; label: string };
+import { useDashboardCharts } from "@/hooks/useDashboardCharts";
+import { useDashboardStatsCards } from "@/hooks/useDashboardStatsCards";
 
 export function Dashboard() {
   const { data, isLoading, error } = useDashboard();
-
-  const ordersChartData = useMemo(() => {
-    if (!data?.ordersByStatus?.length) return [];
-    return [
-      {
-        label: "Pedidos por status",
-        data: data.ordersByStatus.map((item) => ({
-          status: ORDER_STATUS_LABELS[item.status] ?? item.status,
-          count: item.count,
-          label: ORDER_STATUS_LABELS[item.status] ?? item.status,
-        })),
-      },
-    ];
-  }, [data?.ordersByStatus]);
-
-  const commissionsChartData = useMemo(() => {
-    if (!data?.commissionsByStatus?.length) return [];
-    return [
-      {
-        label: "Comissões por status",
-        data: data.commissionsByStatus.map((item) => ({
-          status: COMMISSION_STATUS_LABELS[item.status] ?? item.status,
-          count: item.count,
-          label: COMMISSION_STATUS_LABELS[item.status] ?? item.status,
-        })),
-      },
-    ];
-  }, [data?.commissionsByStatus]);
-
-  const productsChartData = useMemo(() => {
-    if (!data?.topProductsByOrders?.length) return [];
-    return [
-      {
-        label: "Produtos com mais pedidos",
-        data: data.topProductsByOrders.map((item) => ({
-          productName: item.productName,
-          count: item.count,
-          label: item.productName,
-        })),
-      },
-    ];
-  }, [data?.topProductsByOrders]);
-
-  const bestSellersChartData = useMemo(() => {
-    if (!data?.bestSellersCurrentMonth?.length) return [];
-    return [
-      {
-        label: "Melhores vendedores do mês",
-        data: data.bestSellersCurrentMonth.map((item) => ({
-          userName: item.userName,
-          amount: item.amount,
-          label: item.userName,
-        })),
-      },
-    ];
-  }, [data?.bestSellersCurrentMonth]);
-
-  const ordersPrimaryAxis = useMemo<
-    AxisOptions<OrderDatum>
-  >(
-    () => ({
-      getValue: (datum) => datum.label,
-      scaleType: "band",
-      position: "bottom",
-      showGrid: false,
-    }),
-    [],
-  );
-
-  const ordersSecondaryAxes = useMemo<AxisOptions<OrderDatum>[]>(
-    () => [
-      {
-        getValue: (datum) => datum.count,
-        scaleType: "linear",
-        position: "left",
-        elementType: "bar",
-        showGrid: true,
-      },
-    ],
-    [],
-  );
-
-  const commissionsPrimaryAxis = useMemo<
-    AxisOptions<CommissionDatum>
-  >(
-    () => ({
-      getValue: (datum) => datum.label,
-      scaleType: "band",
-      position: "bottom",
-      showGrid: false,
-    }),
-    [],
-  );
-
-  const commissionsSecondaryAxes = useMemo<AxisOptions<CommissionDatum>[]>(
-    () => [
-      {
-        getValue: (datum) => datum.count,
-        scaleType: "linear",
-        position: "left",
-        elementType: "bar",
-        showGrid: true,
-        min: 0,
-      },
-    ],
-    [],
-  );
-
-  const commissionsChartOptions = useMemo(
-    () => ({
-      data: commissionsChartData,
-      primaryAxis: commissionsPrimaryAxis,
-      secondaryAxes: commissionsSecondaryAxes,
-      defaultColors: ["#1cb454"],
-      getSeriesStyle: () => ({
-        rectangle: { fill: "#1cb454" },
-      }),
-      getDatumStyle: () => ({
-        rectangle: { fill: "#1cb454" },
-      }),
-    }),
-    [
-      commissionsChartData,
-      commissionsPrimaryAxis,
-      commissionsSecondaryAxes,
-    ],
-  );
-
-  const productsPrimaryAxis = useMemo<AxisOptions<ProductDatum>>(
-    () => ({
-      getValue: (datum) => datum.label,
-      scaleType: "band",
-      position: "bottom",
-      showGrid: false,
-    }),
-    [],
-  );
-
-  const productsSecondaryAxes = useMemo<AxisOptions<ProductDatum>[]>(
-    () => [
-      {
-        getValue: (datum) => datum.count,
-        scaleType: "linear",
-        position: "left",
-        elementType: "bar",
-        showGrid: true,
-        min: 0,
-      },
-    ],
-    [],
-  );
-
-  const productsChartOptions = useMemo(
-    () => ({
-      data: productsChartData,
-      primaryAxis: productsPrimaryAxis,
-      secondaryAxes: productsSecondaryAxes,
-      defaultColors: ["#1cb454"],
-      getSeriesStyle: () => ({ rectangle: { fill: "#1cb454" } }),
-      getDatumStyle: () => ({ rectangle: { fill: "#1cb454" } }),
-    }),
-    [productsChartData, productsPrimaryAxis, productsSecondaryAxes],
-  );
-
-  const bestSellersPrimaryAxis = useMemo<AxisOptions<SellerDatum>>(
-    () => ({
-      getValue: (datum) => datum.label,
-      scaleType: "band",
-      position: "bottom",
-      showGrid: false,
-    }),
-    [],
-  );
-
-  const bestSellersSecondaryAxes = useMemo<AxisOptions<SellerDatum>[]>(
-    () => [
-      {
-        getValue: (datum) => datum.amount,
-        scaleType: "linear",
-        position: "left",
-        elementType: "bar",
-        showGrid: true,
-        min: 0,
-        formatters: {
-          scale: (value: number) => formatBRL(value),
-          tooltip: (value: number) => formatBRL(value),
-          cursor: (value: number) => formatBRL(value),
-        },
-      },
-    ],
-    [],
-  );
-
-  const bestSellersChartOptions = useMemo(
-    () => ({
-      data: bestSellersChartData,
-      primaryAxis: bestSellersPrimaryAxis,
-      secondaryAxes: bestSellersSecondaryAxes,
-      defaultColors: ["#1cb454"],
-      getSeriesStyle: () => ({ rectangle: { fill: "#1cb454" } }),
-      getDatumStyle: () => ({ rectangle: { fill: "#1cb454" } }),
-    }),
-    [
-      bestSellersChartData,
-      bestSellersPrimaryAxis,
-      bestSellersSecondaryAxes,
-    ],
-  );
+  const statsCards = useDashboardStatsCards(data?.stats);
+  const {
+    ordersChartOptions,
+    commissionsChartOptions,
+    productsChartOptions,
+    bestSellersChartOptions,
+  } = useDashboardCharts(data);
 
   if (isLoading) {
     return (
@@ -262,40 +43,11 @@ export function Dashboard() {
   }
 
   const {
-    stats,
     ordersByStatus,
     commissionsByStatus,
     topProductsByOrders,
     bestSellersCurrentMonth,
   } = data;
-
-  const statsCards = [
-    {
-      title: "Total de usuários",
-      value: String(stats.totalUsers),
-      description: "Usuários cadastrados no sistema",
-    },
-    {
-      title: "Usuários ativos",
-      value: String(stats.activeUsers),
-      description: "Ativos no sistema",
-    },
-    {
-      title: "Total de pedidos",
-      value: String(stats.totalOrders),
-      description: "Pedidos realizados",
-    },
-    {
-      title: "Valor total dos pedidos",
-      value: formatBRL(stats.totalOrdersAmount),
-      description: "Soma de todos os pedidos",
-    },
-    {
-      title: "Valor total de comissões",
-      value: formatBRL(stats.totalCommissionsAmount),
-      description: "Soma das comissões",
-    },
-  ];
 
   return (
     <div className="p-6">
@@ -341,14 +93,7 @@ export function Dashboard() {
             ) : (
               <>
                 <div className="h-[280px] w-full">
-                  <Chart
-                    options={{
-                      data: ordersChartData,
-                      primaryAxis: ordersPrimaryAxis,
-                      secondaryAxes: ordersSecondaryAxes,
-                      defaultColors: ["#1cb454"],
-                    }}
-                  />
+                  <Chart options={ordersChartOptions} />
                 </div>
                 <p className="mt-3 border-t border-gray-100 pt-3 text-xs text-gray-500">
                   <span className="font-medium text-gray-600">Eixo horizontal (colunas):</span> status do pedido.{" "}

@@ -13,12 +13,10 @@
   --rdp-dropdown-gap: 0.75rem;
 }
 
-/* Layout dos dropdowns de mês e ano */
 .rdp-dropdowns {
   gap: var(--rdp-dropdown-gap);
 }
 
-/* Layout <- mês ano -> com botões inline na mesma linha */
 .rdp-root[data-nav-layout="around"] .rdp-month {
   display: grid;
   grid-template-columns: auto 1fr auto;

@@ -1,6 +1,3 @@
-/**
- * userId referencia o id do usuário (1 a 20)
- */
 export const ordersSeed = [
   {
     id: "1",

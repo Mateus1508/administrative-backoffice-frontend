@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Modal } from "@/components/ui/modal";
 import { Input } from "@/components/ui/input";
@@ -10,7 +10,7 @@ import {
   SelectItem,
   SelectValue,
 } from "@/components/ui/select";
-import { useToast } from "@/components/ui/toast";
+import { useToast } from "@/components/ui/use-toast";
 import { formatDate, formatBRL } from "@/lib/utils";
 import type { Order, OrderStatus } from "@/types/order";
 
@@ -34,26 +34,16 @@ interface OrderDetailModalProps {
   onClose: () => void;
 }
 
-export function OrderDetailModal({ order, open, onClose }: OrderDetailModalProps) {
+function OrderFormBody({ order, onClose }: { order: Order; onClose: () => void }) {
   const queryClient = useQueryClient();
   const toast = useToast();
   const [form, setForm] = useState({
-    status: "pendente" as OrderStatus,
-    amount: 0,
+    status: order.status,
+    amount: order.amount,
   });
 
-  useEffect(() => {
-    if (order) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- sync form when selected order changes
-      setForm({ status: order.status, amount: order.amount });
-    }
-  }, [order]);
-
   const mutation = useMutation({
-    mutationFn: (data: typeof form) => {
-      if (!order) return Promise.reject(new Error("Pedido não selecionado"));
-      return updateOrder(order.id, data);
-    },
+    mutationFn: (data: typeof form) => updateOrder(order.id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["orders"] });
       toast.success("Pedido salvo com sucesso");
@@ -63,7 +53,6 @@ export function OrderDetailModal({ order, open, onClose }: OrderDetailModalProps
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!order) return;
     if (!form.amount || form.amount <= 0) {
       toast.warning("O valor deve ser maior que zero.");
       return;
@@ -71,11 +60,8 @@ export function OrderDetailModal({ order, open, onClose }: OrderDetailModalProps
     mutation.mutate(form);
   };
 
-  if (!order) return null;
-
   return (
-    <Modal open={open} onClose={onClose} title="Detalhes do pedido">
-      <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
           <Label>Código do pedido</Label>
           <p className="flex h-10 w-full items-center rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-700">
@@ -156,6 +142,14 @@ export function OrderDetailModal({ order, open, onClose }: OrderDetailModalProps
           </button>
         </div>
       </form>
+  );
+}
+
+export function OrderDetailModal({ order, open, onClose }: OrderDetailModalProps) {
+  if (!order) return null;
+  return (
+    <Modal open={open} onClose={onClose} title="Detalhes do pedido">
+      <OrderFormBody key={order.id} order={order} onClose={onClose} />
     </Modal>
   );
 }

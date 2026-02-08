@@ -1,7 +1,7 @@
-import { createContext, useCallback, useContext, useState } from "react";
-import { AlertTriangle } from "lucide-react";
-import { Check } from "lucide-react";
+import { useCallback, useState } from "react";
+import { AlertTriangle, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ToastContext } from "./toast-context";
 
 type ToastType = "success" | "error" | "warning";
 
@@ -10,14 +10,6 @@ interface ToastItem {
   message: string;
   type: ToastType;
 }
-
-interface ToastContextValue {
-  success: (message: string) => void;
-  error: (message: string) => void;
-  warning: (message: string) => void;
-}
-
-const ToastContext = createContext<ToastContextValue | null>(null);
 
 const TOAST_DURATION_MS = 3000;
 
@@ -83,12 +75,4 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
       </div>
     </ToastContext.Provider>
   );
-}
-
-export function useToast() {
-  const ctx = useContext(ToastContext);
-  if (!ctx) {
-    throw new Error("useToast must be used within ToastProvider");
-  }
-  return ctx;
 }

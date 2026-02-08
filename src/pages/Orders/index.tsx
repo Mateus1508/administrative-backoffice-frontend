@@ -1,6 +1,6 @@
-import { useState, useMemo, useEffect } from "react";
 import { Filter, Loader2, Eye } from "lucide-react";
-import { Badge, badgeVariants } from "@/components/ui/badge";
+import { Badge } from "@/components/ui/badge";
+import { badgeVariants } from "@/components/ui/badge-variants";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Label } from "@/components/ui/label";
 import {
@@ -10,51 +10,34 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Pagination, DEFAULT_PAGE_SIZE } from "@/components/ui/pagination";
+import { Pagination } from "@/components/ui/pagination";
 import { cn, formatDate, formatBRL } from "@/lib/utils";
-import { useOrders } from "@/hooks/useOrders";
-import { useFilters } from "@/hooks/useFilters";
+import { useOrdersPage, ORDER_STATUS_LABELS } from "@/hooks/useOrdersPage";
 import { OrderDetailModal } from "./OrderDetailModal";
-import type { Order, OrderFilters, OrderStatus } from "@/types/order";
-
-const defaultFilters: OrderFilters = {
-  status: "",
-  dateFrom: "",
-  dateTo: "",
-};
-
-const statusLabels: Record<OrderStatus, string> = {
-  pendente: "Pendente",
-  processando: "Processando",
-  entregue: "Entregue",
-  cancelado: "Cancelado",
-};
+import type { OrderStatus } from "@/types/order";
 
 export function Orders() {
-  const [filterOpen, setFilterOpen] = useState(false);
-  const { filters, setFilter, clearFilters, hasActiveFilters } =
-    useFilters<OrderFilters>(defaultFilters);
-
-  const { data: orders = [], isLoading, error } = useOrders(filters);
-  const [detailOrder, setDetailOrder] = useState<Order | null>(null);
-  const [detailOpen, setDetailOpen] = useState(false);
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
-
-  useEffect(() => {
-    setPage(1);
-  }, [filters]);
-
-  const totalOrders = orders.length;
-  const paginatedOrders = useMemo(
-    () => orders.slice((page - 1) * pageSize, page * pageSize),
-    [orders, page, pageSize],
-  );
-
-  const openDetail = (order: Order) => {
-    setDetailOrder(order);
-    setDetailOpen(true);
-  };
+  const {
+    filterOpen,
+    setFilterOpen,
+    filters,
+    setFilterAndResetPage,
+    clearFiltersAndResetPage,
+    hasActiveFilters,
+    orders,
+    isLoading,
+    error,
+    paginatedOrders,
+    totalOrders,
+    page,
+    pageSize,
+    setPage,
+    onPageSizeChange,
+    detailOrder,
+    detailOpen,
+    openDetail,
+    closeDetail,
+  } = useOrdersPage();
 
   return (
     <div className="p-6">
@@ -96,7 +79,10 @@ export function Orders() {
               <Select
                 value={filters.status || "_all"}
                 onValueChange={(v: string) =>
-                  setFilter("status", v === "_all" ? "" : (v as OrderStatus))
+                  setFilterAndResetPage(
+                    "status",
+                    v === "_all" ? "" : (v as OrderStatus),
+                  )
                 }
               >
                 <SelectTrigger id="filter-status">
@@ -118,7 +104,7 @@ export function Orders() {
               <DatePicker
                 id="filter-dateFrom"
                 value={filters.dateFrom}
-                onChange={(v) => setFilter("dateFrom", v)}
+                onChange={(v) => setFilterAndResetPage("dateFrom", v)}
               />
             </div>
             <div className="space-y-1.5">
@@ -128,13 +114,13 @@ export function Orders() {
               <DatePicker
                 id="filter-dateTo"
                 value={filters.dateTo}
-                onChange={(v) => setFilter("dateTo", v)}
+                onChange={(v) => setFilterAndResetPage("dateTo", v)}
               />
             </div>
             {hasActiveFilters && (
               <button
                 type="button"
-                onClick={clearFilters}
+                onClick={clearFiltersAndResetPage}
                 className="rounded-md px-3 py-2 text-sm text-gray-600 hover:bg-gray-200"
               >
                 Limpar filtros
@@ -188,40 +174,40 @@ export function Orders() {
                 </thead>
                 <tbody>
                   {paginatedOrders.map((order) => (
-                  <tr
-                    key={order.id}
-                    className="border-b border-gray-100 transition-colors hover:bg-gray-50/50"
-                  >
-                    <td className="px-4 py-3 font-medium text-gray-900 font-mono">
-                      {order.orderId}
-                    </td>
-                    <td className="px-4 py-3 text-gray-600">
-                      {order.user?.name ?? order.userId}
-                    </td>
-                    <td className="px-4 py-3">
-                      <Badge
-                        variant={order.status as keyof typeof badgeVariants}
-                      >
-                        {statusLabels[order.status]}
-                      </Badge>
-                    </td>
-                    <td className="px-4 py-3 text-gray-700">
-                      {formatBRL(order.amount)}
-                    </td>
-                    <td className="px-4 py-3 text-gray-600">
-                      {formatDate(order.date)}
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      <button
-                        type="button"
-                        onClick={() => openDetail(order)}
-                        className="inline-flex rounded-md p-2 text-gray-500 hover:bg-gray-100 hover:text-[#1cb454]"
-                        aria-label={`Ver detalhes do pedido ${order.orderId}`}
-                      >
-                        <Eye className="h-4 w-4" />
-                      </button>
-                    </td>
-                  </tr>
+                    <tr
+                      key={order.id}
+                      className="border-b border-gray-100 transition-colors hover:bg-gray-50/50"
+                    >
+                      <td className="px-4 py-3 font-medium text-gray-900 font-mono">
+                        {order.orderId}
+                      </td>
+                      <td className="px-4 py-3 text-gray-600">
+                        {order.user?.name ?? order.userId}
+                      </td>
+                      <td className="px-4 py-3">
+                        <Badge
+                          variant={order.status as keyof typeof badgeVariants}
+                        >
+                          {ORDER_STATUS_LABELS[order.status]}
+                        </Badge>
+                      </td>
+                      <td className="px-4 py-3 text-gray-700">
+                        {formatBRL(order.amount)}
+                      </td>
+                      <td className="px-4 py-3 text-gray-600">
+                        {formatDate(order.date)}
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <button
+                          type="button"
+                          onClick={() => openDetail(order)}
+                          className="inline-flex rounded-md p-2 text-gray-500 hover:bg-gray-100 hover:text-[#1cb454]"
+                          aria-label={`Ver detalhes do pedido ${order.orderId}`}
+                        >
+                          <Eye className="h-4 w-4" />
+                        </button>
+                      </td>
+                    </tr>
                   ))}
                 </tbody>
               </table>
@@ -231,10 +217,7 @@ export function Orders() {
               pageSize={pageSize}
               totalItems={totalOrders}
               onPageChange={setPage}
-              onPageSizeChange={(size) => {
-                setPageSize(size);
-                setPage(1);
-              }}
+              onPageSizeChange={onPageSizeChange}
             />
           </>
         )}
@@ -243,10 +226,7 @@ export function Orders() {
       <OrderDetailModal
         order={detailOrder}
         open={detailOpen}
-        onClose={() => {
-          setDetailOpen(false);
-          setDetailOrder(null);
-        }}
+        onClose={closeDetail}
       />
     </div>
   );

@@ -1,10 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Modal } from "@/components/ui/modal";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useToast } from "@/components/ui/toast";
-import type { User, UserStatus } from "@/types/user";
+import { useToast } from "@/components/ui/use-toast";
+import type { User } from "@/types/user";
 import { cn } from "@/lib/utils";
 
 async function updateUser(
@@ -27,20 +27,17 @@ interface UserDetailModalProps {
   onClose: () => void;
 }
 
-export function UserDetailModal({ user, open, onClose }: UserDetailModalProps) {
+function UserFormBody({ user, onClose }: { user: User; onClose: () => void }) {
   const queryClient = useQueryClient();
   const toast = useToast();
   const [form, setForm] = useState({
-    name: "",
-    email: "",
-    status: "ativo" as UserStatus,
+    name: user.name,
+    email: user.email,
+    status: user.status,
   });
 
   const mutation = useMutation({
-    mutationFn: (data: typeof form) => {
-      if (!user) return Promise.reject(new Error("Usuário não selecionado"));
-      return updateUser(user.id, data);
-    },
+    mutationFn: (data: typeof form) => updateUser(user.id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
       toast.success("Usuário salvo com sucesso");
@@ -48,19 +45,8 @@ export function UserDetailModal({ user, open, onClose }: UserDetailModalProps) {
     },
   });
 
-  useEffect(() => {
-    if (user) {
-      setForm({
-        name: user.name,
-        email: user.email,
-        status: user.status,
-      });
-    }
-  }, [user]);
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) return;
     if (!form.name.trim()) {
       toast.warning("O nome é obrigatório.");
       return;
@@ -72,11 +58,8 @@ export function UserDetailModal({ user, open, onClose }: UserDetailModalProps) {
     mutation.mutate(form);
   };
 
-  if (!user) return null;
-
   return (
-    <Modal open={open} onClose={onClose} title="Detalhes do usuário">
-      <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="user-name">Nome</Label>
           <Input
@@ -157,6 +140,14 @@ export function UserDetailModal({ user, open, onClose }: UserDetailModalProps) {
           </button>
         </div>
       </form>
+  );
+}
+
+export function UserDetailModal({ user, open, onClose }: UserDetailModalProps) {
+  if (!user) return null;
+  return (
+    <Modal open={open} onClose={onClose} title="Detalhes do usuário">
+      <UserFormBody key={user.id} user={user} onClose={onClose} />
     </Modal>
   );
 }

@@ -1,4 +1,3 @@
-import { useState, useMemo, useEffect } from "react";
 import { Filter, Loader2, Eye } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -10,58 +9,34 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Pagination, DEFAULT_PAGE_SIZE } from "@/components/ui/pagination";
+import { Pagination } from "@/components/ui/pagination";
 import { cn } from "@/lib/utils";
-import { useUsers } from "@/hooks/useUsers";
-import { useFilters } from "@/hooks/useFilters";
-import { useDebouncedValue } from "@/hooks/useDebouncedValue";
+import { useUsersPage } from "@/hooks/useUsersPage";
 import { UserDetailModal } from "./UserDetailModal";
-import type {
-  User,
-  UserFilters as Filters,
-  UserStatus,
-  UserType,
-} from "@/types/user";
-
-const SEARCH_DEBOUNCE_MS = 1000;
-
-const defaultFilters: Filters = {
-  status: "",
-  type: "",
-  search: "",
-};
+import type { UserStatus, UserType } from "@/types/user";
 
 export function Users() {
-  const [filterOpen, setFilterOpen] = useState(false);
-  const { filters, setFilter, clearFilters, hasActiveFilters } =
-    useFilters<Filters>(defaultFilters);
-
-  const debouncedSearch = useDebouncedValue(filters.search, SEARCH_DEBOUNCE_MS);
-  const filtersForApi = useMemo<Filters>(
-    () => ({ ...filters, search: debouncedSearch }),
-    [filters, debouncedSearch],
-  );
-
-  const { data: users = [], isLoading, error } = useUsers(filtersForApi);
-  const [detailUser, setDetailUser] = useState<User | null>(null);
-  const [detailOpen, setDetailOpen] = useState(false);
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
-
-  useEffect(() => {
-    setPage(1);
-  }, [filtersForApi]);
-
-  const totalUsers = users.length;
-  const paginatedUsers = useMemo(
-    () => users.slice((page - 1) * pageSize, page * pageSize),
-    [users, page, pageSize],
-  );
-
-  const openDetail = (user: User) => {
-    setDetailUser(user);
-    setDetailOpen(true);
-  };
+  const {
+    filterOpen,
+    setFilterOpen,
+    filters,
+    setFilterAndResetPage,
+    clearFiltersAndResetPage,
+    hasActiveFilters,
+    users,
+    isLoading,
+    error,
+    paginatedUsers,
+    totalUsers,
+    page,
+    pageSize,
+    setPage,
+    onPageSizeChange,
+    detailUser,
+    detailOpen,
+    openDetail,
+    closeDetail,
+  } = useUsersPage();
 
   return (
     <div className="p-6">
@@ -107,7 +82,7 @@ export function Users() {
                 type="text"
                 placeholder="Buscar..."
                 value={filters.search}
-                onChange={(e) => setFilter("search", e.target.value)}
+                onChange={(e) => setFilterAndResetPage("search", e.target.value)}
               />
             </div>
             <div className="space-y-1.5">
@@ -117,7 +92,10 @@ export function Users() {
               <Select
                 value={filters.status || "_all"}
                 onValueChange={(v: string) =>
-                  setFilter("status", v === "_all" ? "" : (v as UserStatus))
+                  setFilterAndResetPage(
+                    "status",
+                    v === "_all" ? "" : (v as UserStatus),
+                  )
                 }
               >
                 <SelectTrigger id="filter-status">
@@ -137,7 +115,10 @@ export function Users() {
               <Select
                 value={filters.type || "_all"}
                 onValueChange={(v: string) =>
-                  setFilter("type", v === "_all" ? "" : (v as UserType))
+                  setFilterAndResetPage(
+                    "type",
+                    v === "_all" ? "" : (v as UserType),
+                  )
                 }
               >
                 <SelectTrigger id="filter-type">
@@ -153,7 +134,7 @@ export function Users() {
             {hasActiveFilters && (
               <button
                 type="button"
-                onClick={clearFilters}
+                onClick={clearFiltersAndResetPage}
                 className="rounded-md px-3 py-2 text-sm text-gray-600 hover:bg-gray-200"
               >
                 Limpar filtros
@@ -201,28 +182,28 @@ export function Users() {
                 </thead>
                 <tbody>
                   {paginatedUsers.map((user) => (
-                  <tr
-                    key={user.id}
-                    className="border-b border-gray-100 transition-colors hover:bg-gray-50/50"
-                  >
-                    <td className="px-4 py-3 font-medium text-gray-900">
-                      {user.name}
-                    </td>
-                    <td className="px-4 py-3 text-gray-600">{user.email}</td>
-                    <td className="px-4 py-3">
-                      <Badge variant={user.type}>{user.type}</Badge>
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      <button
-                        type="button"
-                        onClick={() => openDetail(user)}
-                        className="inline-flex rounded-md p-2 text-gray-500 hover:bg-gray-100 hover:text-[#1cb454]"
-                        aria-label={`Ver detalhes de ${user.name}`}
-                      >
-                        <Eye className="h-4 w-4" />
-                      </button>
-                    </td>
-                  </tr>
+                    <tr
+                      key={user.id}
+                      className="border-b border-gray-100 transition-colors hover:bg-gray-50/50"
+                    >
+                      <td className="px-4 py-3 font-medium text-gray-900">
+                        {user.name}
+                      </td>
+                      <td className="px-4 py-3 text-gray-600">{user.email}</td>
+                      <td className="px-4 py-3">
+                        <Badge variant={user.type}>{user.type}</Badge>
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <button
+                          type="button"
+                          onClick={() => openDetail(user)}
+                          className="inline-flex rounded-md p-2 text-gray-500 hover:bg-gray-100 hover:text-[#1cb454]"
+                          aria-label={`Ver detalhes de ${user.name}`}
+                        >
+                          <Eye className="h-4 w-4" />
+                        </button>
+                      </td>
+                    </tr>
                   ))}
                 </tbody>
               </table>
@@ -232,10 +213,7 @@ export function Users() {
               pageSize={pageSize}
               totalItems={totalUsers}
               onPageChange={setPage}
-              onPageSizeChange={(size) => {
-                setPageSize(size);
-                setPage(1);
-              }}
+              onPageSizeChange={onPageSizeChange}
             />
           </>
         )}
@@ -244,10 +222,7 @@ export function Users() {
       <UserDetailModal
         user={detailUser}
         open={detailOpen}
-        onClose={() => {
-          setDetailOpen(false);
-          setDetailUser(null);
-        }}
+        onClose={closeDetail}
       />
     </div>
   );

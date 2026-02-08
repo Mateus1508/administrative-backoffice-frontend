@@ -28,7 +28,10 @@ const mockUsers = [
 function createSchema() {
   const users = mockUsers.map((u) => ({ ...u }));
   return {
-    all: (_model: string) => users,
+    all: (model: string) => {
+      void model;
+      return users;
+    },
     find: (_model: string, id: string) => {
       const i = users.findIndex((x) => x.id === id);
       if (i < 0) return undefined;
